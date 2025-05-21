@@ -1,0 +1,29 @@
+# Bytecode y cachés
+__pycache__/
+*.py[cod]
+
+# Archivos de entorno
+.env
+*.env
+*.log
+
+# Carpetas de compilación
+build/
+dist/
+*.egg-info/
+
+# Modelos
+*.h5
+*.keras
+*.pkl
+
+# MacOS y Linux
+.DS_Store
+*.swp
+
+# Jupyter notebooks temporales
+.ipynb_checkpoints/
+
+# Archivos específicos de tu entorno
+.idea/
+.vscode/

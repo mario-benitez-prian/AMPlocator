@@ -1,0 +1,4 @@
+tensorflow
+biopython
+pandas
+numpy
