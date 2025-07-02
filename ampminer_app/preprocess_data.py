@@ -1,18 +1,48 @@
 import numpy as np
 import tensorflow as tf
 
-def preprocess_data(data, max_length):
-    sequences = []
+def preprocess_fasta_sequences(sequences, max_length):
+
     amino_acids = 'ACDEFGHIKLMNPQRSTVWYX'
     aa_to_index = {aa: i for i, aa in enumerate(amino_acids)}
+    num_classes = len(amino_acids)
 
-    for _, row in data.iterrows():
-        raw_seq = row['Full_Seq'].strip().upper()
-        cleaned_seq = ''.join([aa if aa in amino_acids else 'X' for aa in raw_seq])
-        indices = [aa_to_index.get(aa, aa_to_index['X']) for aa in cleaned_seq]
-        one_hot_seq = tf.keras.utils.to_categorical(indices, num_classes=21)
-        one_hot_seq = one_hot_seq[:max_length]
-        one_hot_seq = np.pad(one_hot_seq, ((0, max_length - len(one_hot_seq)), (0, 0)), mode='constant')
-        sequences.append(one_hot_seq)
+    processed = []
 
-    return np.array(sequences)
+    print(f"Procesando {len(sequences)} secuencias con max_length={max_length}...\n")
+
+    for i, seq in enumerate(sequences):
+        print(f"Secuencia {i+1}/{len(sequences)} original: {seq}")
+
+        # Clean seq 
+        seq = seq.strip().upper()
+        cleaned = ''.join([aa if aa in amino_acids else 'X' for aa in seq])
+        print(f"  Secuencia limpiada: {cleaned}")
+
+        # Cut sequences to max_length
+        cleaned = cleaned[:max_length]
+        seq_len = len(cleaned)
+        pad_total = max_length - seq_len
+        print(f"  Longitud tras truncamiento: {seq_len}")
+
+        # Random padding at both ends
+        pad_left = np.random.randint(0, pad_total + 1)
+        pad_right = pad_total - pad_left
+        print(f"  Padding ? izquierda: {pad_left}, derecha: {pad_right}")
+
+        # One-hot encoding 
+        indices = [aa_to_index[aa] for aa in cleaned]
+        one_hot = tf.keras.utils.to_categorical(indices, num_classes=num_classes)
+
+        # Padding with zero vectors
+        one_hot = np.pad(one_hot, ((pad_left, pad_right), (0, 0)), mode='constant')
+
+        print(f"  Shape final: {one_hot.shape}\n")
+        processed.append(one_hot)
+
+    print("Preprocesamiento completo.\n")
+    return np.array(processed)
+
+secuencias = ["MKTIIALSYIFCLVFAD", "GVLKKLGX*QY"]
+datos = preprocess_fasta_sequences(secuencias, max_length=30)
+print(datos[-1])
