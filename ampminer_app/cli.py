@@ -1,5 +1,4 @@
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # 0 = all logs, 1 = filter INFO, 2 = filter WARNING, 3 = filter all except ERROR
+
 
 import argparse
 from ampminer_app.predictor import run_prediction
@@ -17,3 +16,5 @@ def main():
         model_file=args.model_file,
         output_file=args.output_file
     )
+    
+print("HOLA SOY CLI")

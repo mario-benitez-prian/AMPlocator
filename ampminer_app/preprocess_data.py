@@ -43,6 +43,6 @@ def preprocess_fasta_sequences(sequences, max_length):
     print("Preprocesamiento completo.\n")
     return np.array(processed)
 
-secuencias = ["MKTIIALSYIFCLVFAD", "GVLKKLGX*QY"]
+"""secuencias = ["MKTIIALSYIFCLVFAD", "GVLKKLGX*QY"]
 datos = preprocess_fasta_sequences(secuencias, max_length=30)
-print(datos[-1])
+print(datos[-1])"""
