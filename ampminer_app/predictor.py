@@ -1,3 +1,12 @@
+# Extra: desactiva logging de absl (necesario para XLA)
+import logging
+import absl.logging
+absl.logging.set_verbosity(absl.logging.ERROR)
+absl.logging.set_stderrthreshold("error")
+
+# Este hack es necesario para forzar silencio incluso si ya hay alguna inicialización previa
+logging.getLogger("absl").setLevel(logging.ERROR)
+
 import pandas as pd
 import numpy as np
 from tensorflow.keras.models import load_model
@@ -8,8 +17,6 @@ def predict_precursors(sequences, max_length, model_path):
     print("[INFO] Preprocessing data for precursor prediction...")
 
     X = preprocess_fasta_sequences(sequences, max_length)
-
-    print(f"[INFO] Input shape: {X.shape}")
 
     print("[INFO] Loading precursor model...")
     model = load_model(model_path)
