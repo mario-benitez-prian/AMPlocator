@@ -3,17 +3,17 @@ from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 
-def load_fasta_as_dataframe(fasta_file):
+def read_fasta(fasta_file):
     records = list(SeqIO.parse(fasta_file, "fasta"))
-    df = pd.DataFrame({
-        "ID": [record.description for record in records],
-        "Full_Seq": [str(record.seq) for record in records]
-    })
-    return df
+    headers = [record.description for record in records]
+    sequences = [str(record.seq) for record in records]
+    return headers, sequences
 
-def write_fasta(df, output_file):
+def write_fasta(headers, sequences, output_file):
     records = [
-        SeqRecord(Seq(row["Full_Seq"]), id=row["ID"], description="")
-        for _, row in df.iterrows()
+        SeqRecord(Seq(seq), id=header, description="")
+        for header, seq in zip(headers, sequences)
     ]
     SeqIO.write(records, output_file, "fasta")
+
+print(read_fasta("data/Arabidopsis_thaliana_rRNA_aminoacidos.fasta"))
