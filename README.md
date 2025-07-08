@@ -1,4 +1,4 @@
-# 🧬 AMPminer
+# 🧬 AMPlocator
 
 **AMPminer** es una herramienta de línea de comandos para la detección de **péptidos antimicrobianos (AMPs)** en archivos FASTA de secuencias proteicas completas, utilizando un modelo de inteligencia artificial previamente entrenado.
 
@@ -9,8 +9,8 @@
 1. Clona el repositorio y navega a la carpeta del proyecto:
 
 ```bash
-git clone https://github.com/usuario/AMPminer.git
-cd AMPminer
+git clone https://github.com/usuario/AMP_locator.git
+cd AMPlocator
 ```
 
 2. Crea un entorno virtual e instala las dependencias:
@@ -20,8 +20,8 @@ cd AMPminer
 pip install -r requirements.txt
 
 # O usando conda
-conda create -n ampminer python=3.10
-conda activate ampminer
+conda create -n amplocator python=3.10
+conda activate amplocator
 pip install -r requirements.txt
 ```
 
@@ -31,14 +31,14 @@ pip install -r requirements.txt
 pip install .
 ```
 
-Esto habilita el comando `ampminer` desde cualquier parte del sistema.
+Esto habilita el comando `amplocator` desde cualquier parte del sistema.
 
 ---
 
 ## 🧪 Uso
 
 ```bash
-ampminer <input.fasta> <modelo.keras> <output.fasta> [--max_length MAX_LENGTH]
+amplocator <input.fasta> <output.fasta> --mode [precursor, full, locator]
 ```
 
 ### Argumentos:
@@ -46,23 +46,16 @@ ampminer <input.fasta> <modelo.keras> <output.fasta> [--max_length MAX_LENGTH]
 ```
 Posicionales:
   input.fasta           Archivo FASTA de entrada con el proteoma completo.
-  modelo.keras          Ruta al modelo entrenado (.keras o .h5).
   output.fasta          Archivo FASTA de salida con las secuencias positivas.
 
 Opcionales:
-  --max_length          Longitud máxima para las secuencias (por defecto: 300).
+  --mode                [precursor, full, locator]
 ```
 
 ### Ejemplo:
 
 ```bash
-ampminer proteoma.fasta models/amp_locator_model.keras AMPs_predichos.fasta --max_length 300
-```
-
-También puede ejecutarse directamente sin instalar como paquete:
-
-```bash
-python -m ampminer_app proteoma.fasta models/amp_locator_model.keras salida.fasta --max_length 300
+amplocator proteoma.fasta AMPs_predichos.fasta --mode precursor
 ```
 
 ---
@@ -82,12 +75,6 @@ Instálalas con:
 ```bash
 pip install -r requirements.txt
 ```
-
----
-
-## ✅ Pruebas
-
-Puedes crear pruebas unitarias dentro de la carpeta `tests/` para verificar el correcto funcionamiento de los módulos de la app.
 
 ---
 
