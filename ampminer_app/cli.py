@@ -1,5 +1,3 @@
-
-
 import argparse
 from ampminer_app.predictor import run_prediction
 

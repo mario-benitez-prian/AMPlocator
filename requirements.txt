@@ -1,4 +1,4 @@
-tensorflow
-biopython
-pandas
-numpy
+tensorflow_cpu==2.19.0
+biopython==1.85
+pandas==2.3.0
+numpy==2.1.3
