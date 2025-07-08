@@ -7,6 +7,8 @@ def preprocess_fasta_sequences(sequences, max_length):
     aa_to_index = {aa: i for i, aa in enumerate(amino_acids)}
     num_classes = len(amino_acids)
 
+    print(f"[DEBUG] Se cargaron en preprocess {len(sequences)} secuencias desde el FASTA.")
+
     processed = []
 
     print(f"Procesando {len(sequences)} secuencias con max_length={max_length}...\n")

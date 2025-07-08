@@ -6,8 +6,9 @@ from ampminer_app.fasta_parser import read_fasta, write_fasta
 
 def predict_precursors(sequences, max_length, model_path):
     print("[INFO] Preprocessing data for precursor prediction...")
-    data = pd.DataFrame({'Full_Seq': sequences})
-    X = preprocess_fasta_sequences(data, max_length)
+
+    X = preprocess_fasta_sequences(sequences, max_length)
+
     print(f"[INFO] Input shape: {X.shape}")
 
     print("[INFO] Loading precursor model...")
@@ -21,8 +22,8 @@ def predict_precursors(sequences, max_length, model_path):
 
 def predict_amp_regions(sequences, max_length, model_path):
     print("[INFO] Preprocessing data for AMP localization...")
-    data = pd.DataFrame({'Full_Seq': sequences})
-    X = preprocess_fasta_sequences(data, max_length)
+
+    X = preprocess_fasta_sequences(sequences, max_length)
 
     print("[INFO] Loading AMP locator model...")
     model = load_model(model_path)

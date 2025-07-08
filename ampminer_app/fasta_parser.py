@@ -15,5 +15,3 @@ def write_fasta(headers, sequences, output_file):
         for header, seq in zip(headers, sequences)
     ]
     SeqIO.write(records, output_file, "fasta")
-
-print(read_fasta("data/Arabidopsis_thaliana_rRNA_aminoacidos.fasta"))
