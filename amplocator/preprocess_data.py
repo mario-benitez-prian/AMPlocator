@@ -1,5 +1,3 @@
-
-
 import numpy as np
 import tensorflow as tf
 
@@ -10,7 +8,7 @@ def preprocess_fasta_sequences(sequences, max_length):
     aa_to_index = {aa: i for i, aa in enumerate(amino_acids)}
     num_classes = len(amino_acids)
 
-    print(f"[DEBUG] Se cargaron en preprocess {len(sequences)} secuencias desde el FASTA.")
+    #print(f"[DEBUG] Se cargaron en preprocess {len(sequences)} secuencias desde el FASTA.")
 
     processed = []
 
@@ -43,7 +41,7 @@ def preprocess_fasta_sequences(sequences, max_length):
         #print(f"  Shape final: {one_hot.shape}\n")
         processed.append(one_hot)
 
-    print("Preprocesamiento completo.\n")
+    #print("Preprocesamiento completo.\n")
     return np.array(processed)
 
 """secuencias = ["MKTIIALSYIFCLVFAD", "GVLKKLGX*QY"]

@@ -1,17 +1,8 @@
-# Extra: desactiva logging de absl (necesario para XLA)
-import logging
-import absl.logging
-absl.logging.set_verbosity(absl.logging.ERROR)
-absl.logging.set_stderrthreshold("error")
-
-# Este hack es necesario para forzar silencio incluso si ya hay alguna inicialización previa
-logging.getLogger("absl").setLevel(logging.ERROR)
-
 import pandas as pd
 import numpy as np
 from tensorflow.keras.models import load_model
-from ampminer_app.preprocess_data import preprocess_fasta_sequences
-from ampminer_app.fasta_parser import read_fasta, write_fasta
+from amplocator.preprocess_data import preprocess_fasta_sequences
+from amplocator.fasta_parser import read_fasta, write_fasta
 
 def predict_precursors(sequences, max_length, model_path):
     print("[INFO] Preprocessing data for precursor prediction...")
@@ -22,7 +13,7 @@ def predict_precursors(sequences, max_length, model_path):
     model = load_model(model_path)
 
     print("[INFO] Predicting precursors...")
-    preds = model.predict(X, verbose=0)
+    preds = model.predict(X, verbose=1)
     labels = (preds > 0.5).flatten()
     print(f"[INFO] Detected {np.sum(labels)} positive precursors.")
     return labels
@@ -36,7 +27,7 @@ def predict_amp_regions(sequences, max_length, model_path):
     model = load_model(model_path)
 
     print("[INFO] Predicting AMP regions...")
-    preds = model.predict(X, verbose=0)
+    preds = model.predict(X, verbose=1)
 
     result = []
     for seq, prob in zip(sequences, preds):
