@@ -2,7 +2,12 @@ import pandas as pd
 import numpy as np
 from tensorflow.keras.models import load_model
 from amplocator.preprocess_data import preprocess_fasta_sequences
-from amplocator.fasta_parser import read_fasta, write_fasta
+from amplocator.fasta_parser import read_fasta, write_fasta, export_predictions_table
+
+import sys 
+import os 
+import logging
+import tensorflow as tf
 
 def predict_precursors(sequences, max_length, model_path):
     print("[INFO] Preprocessing data for precursor prediction...")
@@ -15,8 +20,13 @@ def predict_precursors(sequences, max_length, model_path):
     print("[INFO] Predicting precursors...")
     preds = model.predict(X, verbose=1)
     labels = (preds > 0.5).flatten()
+
     print(f"[INFO] Detected {np.sum(labels)} positive precursors.")
-    return labels
+
+    # Flatten preds to be unidimensional array
+    preds = preds.flatten()
+
+    return labels, preds
 
 def predict_amp_regions(sequences, max_length, model_path):
     print("[INFO] Preprocessing data for AMP localization...")
@@ -40,7 +50,7 @@ def predict_amp_regions(sequences, max_length, model_path):
             result.append(seq[start:end])
     return result
 
-def run_prediction(fasta_file, output_file, mode):
+def run_prediction(fasta_file, output_prefix, mode):
     print("[INFO] Reading input FASTA...")
     headers, sequences = read_fasta(fasta_file)
 
@@ -49,10 +59,13 @@ def run_prediction(fasta_file, output_file, mode):
     locator_model_path = "models/amp_locator_model.keras"
 
     if mode == "precursor":
-        labels = predict_precursors(sequences, max_length, precursor_model_path)
+        labels, preds = predict_precursors(sequences, max_length, precursor_model_path)
+        # Filter positive sequences
         filtered_headers = [h for h, l in zip(headers, labels) if l == 1]
         filtered_seqs = [s for s, l in zip(sequences, labels) if l == 1]
-        write_fasta(filtered_headers, filtered_seqs, output_file)
+        filtered_preds = [s for s, l in zip(preds, labels) if l == 1]
+        write_fasta(filtered_headers, filtered_seqs, output_prefix)
+        export_predictions_table(filtered_headers, filtered_seqs, filtered_preds, output_prefix)
 
     elif mode == "full":
         labels = predict_precursors(sequences, max_length, precursor_model_path)

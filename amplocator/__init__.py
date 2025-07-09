@@ -1,6 +1,5 @@
 # replace `import tensorflow as tf` with this line
-# or insert this line at the beginning of the `__init__.py` of a package that depends on tensorflow
-"""tf = import_tensorflow()    
+# or insert this line at the beginning of the `__init__.py` of a package that depends on tensorflow   
 
 # may put this function in another utility file
 def import_tensorflow():
@@ -17,11 +16,11 @@ def import_tensorflow():
     tf.autograph.set_verbosity(0)
     import logging
     tf.get_logger().setLevel(logging.ERROR)
-    return tf"""
+    return tf
+
+tf = import_tensorflow() 
     
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-    
-print("HOLA SOY MAIN")
