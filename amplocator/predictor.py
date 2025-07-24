@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from tensorflow.keras.models import load_model
 from amplocator.preprocess_data import preprocess_fasta_sequences
-from amplocator.fasta_parser import read_fasta, write_fasta, export_predictions_table
+from amplocator.fasta_parser import read_fasta, write_fasta, write_precursor_predictions_table
 
 import sys 
 import os 
@@ -30,25 +30,31 @@ def predict_precursors(sequences, max_length, model_path):
 
 def predict_amp_regions(sequences, max_length, model_path):
     print("[INFO] Preprocessing data for AMP localization...")
-
     X = preprocess_fasta_sequences(sequences, max_length)
 
     print("[INFO] Loading AMP locator model...")
     model = load_model(model_path)
 
     print("[INFO] Predicting AMP regions...")
-    preds = model.predict(X, verbose=1)
+    preds = model.predict(X, verbose=1)  # (N, L) probabilities
 
-    result = []
-    for seq, prob in zip(sequences, preds):
-        binary = (prob > 0.5).astype(int)
-        if np.sum(binary) == 0:
-            result.append("")
-        else:
-            start = np.argmax(binary)
-            end = len(binary) - np.argmax(binary[::-1])
-            result.append(seq[start:end])
-    return result
+    binary_labels = (preds > 0.5).astype(int)
+
+    mature_amps = []
+    trimmed_labels = []
+    trimmed_preds = []
+
+    for seq, label, prob in zip(sequences, binary_labels, preds):
+        length = len(seq)
+        label = label[:length]
+        prob = prob[:length]
+
+        masked_seq = ''.join([aa if l == 1 else '-' for aa, l in zip(seq, label)])
+        mature_amps.append(masked_seq)
+        trimmed_labels.append(label)
+        trimmed_preds.append(prob)
+
+    return sequences, mature_amps, trimmed_labels, trimmed_preds
 
 def run_prediction(fasta_file, output_prefix, mode):
     print("[INFO] Reading input FASTA...")
@@ -65,7 +71,7 @@ def run_prediction(fasta_file, output_prefix, mode):
         filtered_seqs = [s for s, l in zip(sequences, labels) if l == 1]
         filtered_preds = [s for s, l in zip(preds, labels) if l == 1]
         write_fasta(filtered_headers, filtered_seqs, output_prefix)
-        export_predictions_table(filtered_headers, filtered_seqs, filtered_preds, output_prefix)
+        write_precursor_predictions_table(filtered_headers, filtered_seqs, filtered_preds, output_prefix)
 
     elif mode == "full":
         labels = predict_precursors(sequences, max_length, precursor_model_path)
@@ -78,9 +84,82 @@ def run_prediction(fasta_file, output_prefix, mode):
         write_fasta(final_headers, final_seqs, output_file)
 
     elif mode == "locator":
-        amp_seqs = predict_amp_regions(sequences, max_length, locator_model_path)
-        final_headers = [h for h, amp in zip(headers, amp_seqs) if amp]
-        final_seqs = [amp for amp in amp_seqs if amp]
-        write_fasta(final_headers, final_seqs, output_file)
+        full_seqs, mature_seqs, labels, scores = predict_amp_regions(sequences, max_length, locator_model_path)
+        write_locator_predictions_table(headers, full_seqs, mature_seqs, labels, scores, output_prefix)
+        write_fasta(headers, mature_seqs, output_prefix)
 
     print("[INFO] Prediction completed.")
+
+
+    ########### Parte de lectura y escritura de archivos 
+
+import pandas as pd
+from Bio import SeqIO
+from Bio.SeqRecord import SeqRecord
+from Bio.Seq import Seq
+
+def read_fasta(fasta_file):
+    records = list(SeqIO.parse(fasta_file, "fasta"))
+    headers = [record.description for record in records]
+    sequences = [str(record.seq).upper().strip() for record in records]
+    return headers, sequences
+
+def write_fasta(headers, sequences, output_prefix):
+    records = [
+        SeqRecord(Seq(seq), id=header, description="")
+        for header, seq in zip(headers, sequences)
+    ]
+    fasta_file = f"{output_prefix}_precursor.fasta"
+    SeqIO.write(records, f"{output_prefix}_precursor.fasta", "fasta")
+
+def write_precursor_predictions_table(headers, seqs, preds, output_prefix):
+    """
+    Export results of precursor proteins
+    """
+    tsv_file = f"{output_prefix}_precursor.tsv"
+    xlsx_file = f"{output_prefix}_precursor.xlsx"
+    #print(headers)
+    #print(seqs)
+    #print(preds)
+    #print(len(preds))
+    #assert len(headers) == len(seqs) == len(preds), "Las longitudes no coinciden"
+
+    df = pd.DataFrame({
+        "ID": headers,
+        "Precursor": seqs, 
+        "Probability": preds
+    }) 
+
+    print(f"[INFO] Precursor results save in: {tsv_file} y {xlsx_file}")
+    df.to_csv(tsv_file, sep="\t", index=False)
+    df.to_excel(xlsx_file, index=False)
+
+def write_locator_predictions_table(headers, full_seqs, mature_seqs, labels, scores, output_prefix):
+    """
+    Export results of mature AMP localization.
+
+    """
+    tsv_file = f"{output_prefix}_locator_predictions.tsv"
+    xlsx_file = f"{output_prefix}_locator_predictions.xlsx"
+
+    mean_scores = [np.mean(s) for s in scores] # Calculating mean probability 
+
+    df = pd.DataFrame({
+        "ID": headers,
+        "Full_Seq": full_seqs,
+        "Mature_AMP": mature_seqs,
+        "Probability": mean_scores
+    })
+
+    df = df[df["Probability"] >= 0.5] # Filtering positive predictions only
+
+    print(f"[INFO] Saving mature AMP prediction results to: {tsv_file} and {xlsx_file}")
+    df.to_csv(tsv_file, sep="\t", index=False)
+    df.to_excel(xlsx_file, index=False)
+
+def write_full_predictions_table():
+    """
+    Export precursor and mature AMP results 
+
+    """
+    print("[INFO] Saving precursors and mature AMPs")
