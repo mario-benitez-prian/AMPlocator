@@ -1,6 +1,7 @@
 
 
 import pandas as pd
+import numpy as np
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
@@ -41,24 +42,30 @@ def write_precursor_predictions_table(headers, seqs, preds, output_prefix):
     df.to_csv(tsv_file, sep="\t", index=False)
     df.to_excel(xlsx_file, index=False)
 
-def write_locator_predictions_table(headers, full_seqs, mature_seqs, labels, scores, output_prefix):
+def write_locator_predictions_table(results, output_prefix):
     """
-    Export results of mature AMP localization.
+    Export results of mature AMP localization from a unified results list.
 
+    Parameters:
+        results: list of tuples (header, full_seq, mature_amp, avg_prob)
+        output_prefix: prefix for output file names
     """
+    if not results:
+        print("[WARNING] No AMP predictions to export.")
+        return
+
     tsv_file = f"{output_prefix}_locator_predictions.tsv"
     xlsx_file = f"{output_prefix}_locator_predictions.xlsx"
 
-    mean_scores = [np.mean(s) for s in scores] # Calculating mean probability 
+    # Unpack results into separate lists
+    headers, full_seqs, mature_seqs, avg_probs = zip(*results)
 
     df = pd.DataFrame({
         "ID": headers,
         "Full_Seq": full_seqs,
         "Mature_AMP": mature_seqs,
-        "Probability": mean_scores
+        "Probability": avg_probs
     })
-
-    df = df[df["Probability"] >= 0.5] # Filtering positive predictions only
 
     print(f"[INFO] Saving mature AMP prediction results to: {tsv_file} and {xlsx_file}")
     df.to_csv(tsv_file, sep="\t", index=False)

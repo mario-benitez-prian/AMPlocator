@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from tensorflow.keras.models import load_model
 from amplocator.preprocess_data import preprocess_fasta_sequences
-from amplocator.fasta_parser import read_fasta, write_fasta, write_precursor_predictions_table
+from amplocator.fasta_parser import read_fasta, write_fasta, write_precursor_predictions_table, write_locator_predictions_table
 
 import sys 
 import os 
@@ -10,6 +10,7 @@ import logging
 import tensorflow as tf
 
 def predict_precursors(sequences, max_length, model_path):
+
     print("[INFO] Preprocessing data for precursor prediction...")
 
     X = preprocess_fasta_sequences(sequences, max_length)
@@ -28,7 +29,7 @@ def predict_precursors(sequences, max_length, model_path):
 
     return labels, preds
 
-def predict_amp_regions(sequences, max_length, model_path):
+def predict_amp_regions(headers, sequences, max_length, model_path):
     print("[INFO] Preprocessing data for AMP localization...")
     X = preprocess_fasta_sequences(sequences, max_length)
 
@@ -38,25 +39,38 @@ def predict_amp_regions(sequences, max_length, model_path):
     print("[INFO] Predicting AMP regions...")
     preds = model.predict(X, verbose=1)  # (N, L) probabilities
 
-    binary_labels = (preds > 0.5).astype(int)
+    results = []
 
-    mature_amps = []
-    trimmed_labels = []
-    trimmed_preds = []
+    for i, pred in enumerate(preds):
+        real_length = len(sequences[i])
+        start_of_sequence = np.where(X[i].sum(axis=1) != 0)[0][0]
+        pred_real = pred[start_of_sequence:start_of_sequence + real_length]
+        amp_indices = np.where(pred_real > 0.5)[0]
 
-    for seq, label, prob in zip(sequences, binary_labels, preds):
-        length = len(seq)
-        label = label[:length]
-        prob = prob[:length]
+        print("\n--- Sequence:", headers[i])
+        print("Original sequence:", sequences[i])
+        print("Predicted full vector (length={}):".format(len(pred)), np.round(pred, 2).tolist())
+        print("Trimmed prediction (no padding):", np.round(pred_real, 2).tolist())
+        print("AMP indices:", amp_indices.tolist())
 
-        masked_seq = ''.join([aa if l == 1 else '-' for aa, l in zip(seq, label)])
-        mature_amps.append(masked_seq)
-        trimmed_labels.append(label)
-        trimmed_preds.append(prob)
+        if len(amp_indices) > 0:
+            mature_amp = ''.join(sequences[i][idx] if idx in amp_indices else '-' for idx in range(real_length))
+            avg_prob = np.mean(pred_real[amp_indices])  # Use pred_real instead of full pred
+            print("Mature AMP sequence:", mature_amp)
+            print("Mean AMP probability:", round(avg_prob, 2))
+            results.append((headers[i], sequences[i], mature_amp, round(avg_prob, 2)))
+        else:
+            print("No AMP detected.")
 
-    return sequences, mature_amps, trimmed_labels, trimmed_preds
+    print("\n[INFO] Final results:")
+    #for r in results:
+        #print(r)
+
+    return results
+
 
 def run_prediction(fasta_file, output_prefix, mode):
+
     print("[INFO] Reading input FASTA...")
     headers, sequences = read_fasta(fasta_file)
 
@@ -84,82 +98,8 @@ def run_prediction(fasta_file, output_prefix, mode):
         write_fasta(final_headers, final_seqs, output_file)
 
     elif mode == "locator":
-        full_seqs, mature_seqs, labels, scores = predict_amp_regions(sequences, max_length, locator_model_path)
-        write_locator_predictions_table(headers, full_seqs, mature_seqs, labels, scores, output_prefix)
-        write_fasta(headers, mature_seqs, output_prefix)
+        results = predict_amp_regions(headers, sequences, max_length, locator_model_path)
+        write_locator_predictions_table(results, output_prefix)
 
     print("[INFO] Prediction completed.")
 
-
-    ########### Parte de lectura y escritura de archivos 
-
-import pandas as pd
-from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
-from Bio.Seq import Seq
-
-def read_fasta(fasta_file):
-    records = list(SeqIO.parse(fasta_file, "fasta"))
-    headers = [record.description for record in records]
-    sequences = [str(record.seq).upper().strip() for record in records]
-    return headers, sequences
-
-def write_fasta(headers, sequences, output_prefix):
-    records = [
-        SeqRecord(Seq(seq), id=header, description="")
-        for header, seq in zip(headers, sequences)
-    ]
-    fasta_file = f"{output_prefix}_precursor.fasta"
-    SeqIO.write(records, f"{output_prefix}_precursor.fasta", "fasta")
-
-def write_precursor_predictions_table(headers, seqs, preds, output_prefix):
-    """
-    Export results of precursor proteins
-    """
-    tsv_file = f"{output_prefix}_precursor.tsv"
-    xlsx_file = f"{output_prefix}_precursor.xlsx"
-    #print(headers)
-    #print(seqs)
-    #print(preds)
-    #print(len(preds))
-    #assert len(headers) == len(seqs) == len(preds), "Las longitudes no coinciden"
-
-    df = pd.DataFrame({
-        "ID": headers,
-        "Precursor": seqs, 
-        "Probability": preds
-    }) 
-
-    print(f"[INFO] Precursor results save in: {tsv_file} y {xlsx_file}")
-    df.to_csv(tsv_file, sep="\t", index=False)
-    df.to_excel(xlsx_file, index=False)
-
-def write_locator_predictions_table(headers, full_seqs, mature_seqs, labels, scores, output_prefix):
-    """
-    Export results of mature AMP localization.
-
-    """
-    tsv_file = f"{output_prefix}_locator_predictions.tsv"
-    xlsx_file = f"{output_prefix}_locator_predictions.xlsx"
-
-    mean_scores = [np.mean(s) for s in scores] # Calculating mean probability 
-
-    df = pd.DataFrame({
-        "ID": headers,
-        "Full_Seq": full_seqs,
-        "Mature_AMP": mature_seqs,
-        "Probability": mean_scores
-    })
-
-    df = df[df["Probability"] >= 0.5] # Filtering positive predictions only
-
-    print(f"[INFO] Saving mature AMP prediction results to: {tsv_file} and {xlsx_file}")
-    df.to_csv(tsv_file, sep="\t", index=False)
-    df.to_excel(xlsx_file, index=False)
-
-def write_full_predictions_table():
-    """
-    Export precursor and mature AMP results 
-
-    """
-    print("[INFO] Saving precursors and mature AMPs")
