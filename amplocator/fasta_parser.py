@@ -12,64 +12,45 @@ def read_fasta(fasta_file):
     sequences = [str(record.seq).upper().strip() for record in records]
     return headers, sequences
 
-def write_fasta(headers, sequences, output_prefix):
+def write_fasta(results, output_prefix):
     records = [
         SeqRecord(Seq(seq), id=header, description="")
-        for header, seq in zip(headers, sequences)
+        for header, seq in zip(results["ID"], results["Precursor"])
     ]
     fasta_file = f"{output_prefix}_precursor.fasta"
     SeqIO.write(records, f"{output_prefix}_precursor.fasta", "fasta")
 
-def write_precursor_predictions_table(headers, seqs, preds, output_prefix):
+def write_precursor_predictions_table(results, output_prefix):
     """
     Export results of precursor proteins
+
     """
+    if results.empty:
+        print("[WARNING] No mature AMP predictions to export.")
+        return
+
     tsv_file = f"{output_prefix}_precursor.tsv"
     xlsx_file = f"{output_prefix}_precursor.xlsx"
-    #print(headers)
-    #print(seqs)
-    #print(preds)
-    #print(len(preds))
-    #assert len(headers) == len(seqs) == len(preds), "Las longitudes no coinciden"
-
-    df = pd.DataFrame({
-        "ID": headers,
-        "Precursor": seqs, 
-        "Probability": preds
-    }) 
 
     print(f"[INFO] Precursor results save in: {tsv_file} y {xlsx_file}")
-    df.to_csv(tsv_file, sep="\t", index=False)
-    df.to_excel(xlsx_file, index=False)
+    results.to_csv(tsv_file, sep="\t", index=False)
+    results.to_excel(xlsx_file, index=False)
 
 def write_locator_predictions_table(results, output_prefix):
     """
     Export results of mature AMP localization from a unified results list.
 
-    Parameters:
-        results: list of tuples (header, full_seq, mature_amp, avg_prob)
-        output_prefix: prefix for output file names
     """
-    if not results:
-        print("[WARNING] No AMP predictions to export.")
+    if results.empty:
+        print("[WARNING] No mature AMP predictions to export.")
         return
 
     tsv_file = f"{output_prefix}_locator_predictions.tsv"
     xlsx_file = f"{output_prefix}_locator_predictions.xlsx"
 
-    # Unpack results into separate lists
-    headers, full_seqs, mature_seqs, avg_probs = zip(*results)
-
-    df = pd.DataFrame({
-        "ID": headers,
-        "Full_Seq": full_seqs,
-        "Mature_AMP": mature_seqs,
-        "Probability": avg_probs
-    })
-
     print(f"[INFO] Saving mature AMP prediction results to: {tsv_file} and {xlsx_file}")
-    df.to_csv(tsv_file, sep="\t", index=False)
-    df.to_excel(xlsx_file, index=False)
+    results.to_csv(tsv_file, sep="\t", index=False)
+    results.to_excel(xlsx_file, index=False)
 
 def write_full_predictions_table():
     """

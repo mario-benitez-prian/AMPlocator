@@ -9,7 +9,7 @@ import os
 import logging
 import tensorflow as tf
 
-def predict_precursors(sequences, max_length, model_path):
+def predict_precursors(headers, sequences, max_length, model_path):
 
     print("[INFO] Preprocessing data for precursor prediction...")
 
@@ -19,15 +19,18 @@ def predict_precursors(sequences, max_length, model_path):
     model = load_model(model_path)
 
     print("[INFO] Predicting precursors...")
-    preds = model.predict(X, verbose=1)
+    preds = model.predict(X, verbose=1).flatten()
+    
     labels = (preds > 0.5).flatten()
-
     print(f"[INFO] Detected {np.sum(labels)} positive precursors.")
 
-    # Flatten preds to be unidimensional array
-    preds = preds.flatten()
+    results = pd.DataFrame({
+        "ID": headers,
+        "Precursor": sequences,
+        "Precursor_score": round(preds, 2)
+    })
 
-    return labels, preds
+    return results
 
 def predict_amp_regions(headers, sequences, max_length, model_path):
     print("[INFO] Preprocessing data for AMP localization...")
@@ -58,13 +61,16 @@ def predict_amp_regions(headers, sequences, max_length, model_path):
             avg_prob = np.mean(pred_real[amp_indices])  # Use pred_real instead of full pred
             print("Mature AMP sequence:", mature_amp)
             print("Mean AMP probability:", round(avg_prob, 2))
-            results.append((headers[i], sequences[i], mature_amp, round(avg_prob, 2)))
+            results.append({
+                "ID": headers[i],
+                "Precursor": sequences[i],
+                "Mature_peptide": mature_amp,
+                "Mature_score": round(avg_prob, 2)
+            })
         else:
             print("No AMP detected.")
 
-    print("\n[INFO] Final results:")
-    #for r in results:
-        #print(r)
+    results = pd.DataFrame(results)
 
     return results
 
@@ -79,13 +85,11 @@ def run_prediction(fasta_file, output_prefix, mode):
     locator_model_path = "models/amp_locator_model.keras"
 
     if mode == "precursor":
-        labels, preds = predict_precursors(sequences, max_length, precursor_model_path)
+        results = predict_precursors(headers, sequences, max_length, precursor_model_path)
         # Filter positive sequences
-        filtered_headers = [h for h, l in zip(headers, labels) if l == 1]
-        filtered_seqs = [s for s, l in zip(sequences, labels) if l == 1]
-        filtered_preds = [s for s, l in zip(preds, labels) if l == 1]
-        write_fasta(filtered_headers, filtered_seqs, output_prefix)
-        write_precursor_predictions_table(filtered_headers, filtered_seqs, filtered_preds, output_prefix)
+        results = results[results["Score"] >= 0.5]
+        write_fasta(results, output_prefix)
+        write_precursor_predictions_table(results, output_prefix)
 
     elif mode == "full":
         labels = predict_precursors(sequences, max_length, precursor_model_path)
