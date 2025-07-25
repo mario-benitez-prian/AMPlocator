@@ -5,6 +5,8 @@ from amplocator.fasta_parser import read_fasta, write_fasta, write_precursor_pre
 
 def predict_precursors(headers, sequences, max_length, model_path):
 
+    from tensorflow.keras.models import load_model
+
     print("[INFO] Preprocessing data for precursor prediction...")
 
     X = preprocess_fasta_sequences(sequences, max_length)
@@ -31,6 +33,8 @@ def predict_precursors(headers, sequences, max_length, model_path):
     return results
 
 def predict_amp_regions(headers, sequences, max_length, model_path):
+
+    from tensorflow.keras.models import load_model
 
     print("[INFO] Preprocessing data for AMP localization...")
     X = preprocess_fasta_sequences(sequences, max_length)
@@ -79,7 +83,6 @@ def predict_amp_regions(headers, sequences, max_length, model_path):
 def run_prediction(fasta_file, output_prefix, mode):
 
     import tensorflow as tf
-    from tensorflow.keras.models import load_model
 
     print("[INFO] Reading input FASTA...")
     headers, sequences = read_fasta(fasta_file)
