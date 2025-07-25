@@ -1,7 +1,8 @@
 import numpy as np
-import tensorflow as tf
 
 def preprocess_fasta_sequences(sequences, max_length):
+
+    import tensorflow as tf
 
     np.random.seed(42)
     amino_acids = 'ACDEFGHIKLMNPQRSTVWYX'
