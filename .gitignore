@@ -13,9 +13,9 @@ dist/
 *.egg-info/
 
 # Modelos
-*.h5
-*.keras
-*.pkl
+#*.h5
+#*.keras
+#*.pkl
 
 # MacOS y Linux
 .DS_Store
