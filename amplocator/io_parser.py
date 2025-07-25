@@ -23,6 +23,7 @@ def write_fasta(results, output_prefix):
     ]
     fasta_file = f"{output_prefix}_precursor.fasta"
     SeqIO.write(records, f"{output_prefix}_precursor.fasta", "fasta")
+    print(f"[INFO] Precursor fasta save in: {fasta_file}")
 
 
 

@@ -3,6 +3,9 @@ import numpy as np
 from amplocator.preprocess_data import preprocess_fasta_sequences
 from amplocator.io_parser import read_fasta, write_fasta, write_precursor_predictions_table, write_locator_predictions_table, write_full_predictions_table
 
+
+
+
 def predict_precursors(headers, sequences, max_length, model_path):
 
     from tensorflow.keras.models import load_model
@@ -33,6 +36,9 @@ def predict_precursors(headers, sequences, max_length, model_path):
     results["Precursor_score"] = results["Precursor_score"].round(2) 
 
     return results
+
+
+
 
 def predict_amp_regions(headers, sequences, max_length, model_path):
 
@@ -83,11 +89,13 @@ def predict_amp_regions(headers, sequences, max_length, model_path):
 
     return results
 
+    
+
 
 def run_prediction(input_file, output_prefix, mode):
 
     import tensorflow as tf
-    
+
     headers, sequences = read_fasta(input_file)
 
     max_length = 300
