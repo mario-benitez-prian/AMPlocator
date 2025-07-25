@@ -5,7 +5,7 @@ setup(
     version="0.1",
     packages=find_packages(),
     install_requires=[
-        "tensorflow",
+        "tensorflow==2.19.0",
         "biopython",
         "pandas",
         "numpy"
