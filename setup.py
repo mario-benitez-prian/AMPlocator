@@ -1,18 +1,18 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="ampminer",
+    name="amplocator",
     version="0.1",
     packages=find_packages(),
     install_requires=[
-        "tensorflow",
+        "tensorflow==2.19.0",
         "biopython",
         "pandas",
         "numpy"
     ],
     entry_points={
         "console_scripts": [
-            "ampminer=ampminer_app.cli:main"
+            "amplocator=amplocator.cli:main"
         ]
     }
 )
