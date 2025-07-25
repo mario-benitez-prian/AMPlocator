@@ -19,15 +19,20 @@ def predict_precursors(headers, sequences, max_length, model_path):
 
     print("[INFO] Predicting precursors...")
     preds = model.predict(X, verbose=1).flatten()
-    
-    labels = (preds >= 0.5).flatten()
-    print(f"[INFO] Detected {np.sum(labels)} positive precursors.")
 
     results = pd.DataFrame({
         "ID": headers,
         "Precursor": sequences,
-        "Precursor_score": preds.round(2)
+        "Precursor_score": preds
     })
+
+    results = results[results["Precursor_score"] >= 0.5] # Filtering positive results
+
+    num_positives = len(results["ID"])
+
+    print(f"[INFO] Detected {num_positives} positive precursors.")
+
+    results["Precursor_score"] = results["Precursor_score"].round(2) 
 
     return results
 
@@ -88,18 +93,14 @@ def run_prediction(fasta_file, output_prefix, mode):
 
     if mode == "precursor":
         results = predict_precursors(headers, sequences, max_length, precursor_model_path)
-        results = results[results["Precursor_score"] >= 0.5] # Filter positive sequences
         write_fasta(results, output_prefix)
         write_precursor_predictions_table(results, output_prefix)
 
     elif mode == "full":
-        precursor_results = predict_precursors(headers, sequences, max_length, precursor_model_path)
-        precursor_results = precursor_results[precursor_results["Precursor_score"] >= 0.5] # Filter positive sequences
-
+        precursor_results = predict_precursors(headers, sequences, max_length, precursor_model_path) 
         write_fasta(precursor_results, output_prefix)
 
         locator_results = predict_amp_regions(list(precursor_results["ID"]), list(precursor_results["Precursor"]), max_length, locator_model_path)
-
         write_full_predictions_table(precursor_results, locator_results, output_prefix)
 
     elif mode == "locator":

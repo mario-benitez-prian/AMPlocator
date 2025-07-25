@@ -1,5 +1,3 @@
-
-
 import pandas as pd
 import numpy as np
 from Bio import SeqIO
@@ -72,36 +70,23 @@ def write_full_predictions_table(precursor_results, locator_results, output_pref
     Export precursor and mature AMP results 
 
     """
-    
-    if precursor_results.empty:
-        print("[WARNING] No mature AMP predictions to export.")
-        return
 
     tsv_file = f"{output_prefix}_full_predictions.tsv"
     xlsx_file = f"{output_prefix}_full_predictions.xlsx"
 
-    # Seleccionamos solo las columnas que queremos del locator_results
+    if precursor_results.empty:
+        print("[WARNING] No mature AMP predictions to export.")
+        return
+
+    # Selecting the desired columns in locator_results and clean index
     locator_subset = locator_results[["Mature_peptide", "Mature_score"]].reset_index(drop=True)
 
-    # Nos aseguramos de que precursor_results también tenga índice limpio
+    # Clean precursor_results index
     precursor_results = precursor_results.reset_index(drop=True)
 
-    # Concatenamos columna a columna (axis=1)
+    # Concat by column
     full_results = pd.concat([precursor_results, locator_subset], axis=1)
-
-    '''full_results = pd.DataFrame({
-        "ID": precursor_results["ID"],
-        "Precursor": precursor_results["Precursor"],
-        "Precursor_score": precursor_results["Precursor_score"],
-        "Mature_peptide": locator_results["Mature_peptide"],
-        "Mature_score": locator_results["Mature_score"]
-    })'''
-    print(full_results.head(10))
-    print(full_results.shape)
 
     print(f"[INFO] Saving precursors and mature AMPs results to: {tsv_file} and {xlsx_file}")
     full_results.to_csv(tsv_file, sep="\t", index=False)
     full_results.to_excel(xlsx_file, index=False)
-
-    print(full_results.head(10))
-    print(full_results.shape)
