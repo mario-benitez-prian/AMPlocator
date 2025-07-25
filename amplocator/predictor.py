@@ -1,13 +1,15 @@
 import pandas as pd
 import numpy as np
 from amplocator.preprocess_data import preprocess_fasta_sequences
-from amplocator.fasta_parser import read_fasta, write_fasta, write_precursor_predictions_table, write_locator_predictions_table, write_full_predictions_table
+from amplocator.io_parser import read_fasta, write_fasta, write_precursor_predictions_table, write_locator_predictions_table, write_full_predictions_table
 
 def predict_precursors(headers, sequences, max_length, model_path):
 
     from tensorflow.keras.models import load_model
 
-    print("[INFO] Preprocessing data for precursor prediction...")
+    print("----------RUNNING PRECURSOR MODEL----------")
+
+    print("[INFO] Reading and preprocessing data for precursor prediction...")
 
     X = preprocess_fasta_sequences(sequences, max_length)
 
@@ -36,12 +38,14 @@ def predict_amp_regions(headers, sequences, max_length, model_path):
 
     from tensorflow.keras.models import load_model
 
-    print("[INFO] Preprocessing data for AMP localization...")
+    print("----------RUNNING LOCATOR MODEL----------")
+
+    print("[INFO] Reading and preprocessing data for mature AMP localization...")
     X = preprocess_fasta_sequences(sequences, max_length)
 
     model = load_model(model_path)
 
-    print("[INFO] Predicting AMP regions...")
+    print("[INFO] Predicting mature AMP regions...")
     preds = model.predict(X, verbose=1)  # (N, L) probabilities
 
     results = []
@@ -80,12 +84,11 @@ def predict_amp_regions(headers, sequences, max_length, model_path):
     return results
 
 
-def run_prediction(fasta_file, output_prefix, mode):
+def run_prediction(input_file, output_prefix, mode):
 
     import tensorflow as tf
-
-    print("[INFO] Reading input FASTA...")
-    headers, sequences = read_fasta(fasta_file)
+    
+    headers, sequences = read_fasta(input_file)
 
     max_length = 300
     precursor_model_path = "models/precursor_model.keras"

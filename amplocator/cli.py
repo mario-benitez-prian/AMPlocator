@@ -4,17 +4,17 @@ from amplocator.predictor import run_prediction
 def main():
 
     parser = argparse.ArgumentParser(description="AMPlocator: two neural networks to predict antimicrobial peptide precursors and mature/active peptide location")
-    parser.add_argument("fasta_file", help="File in fasta format with protein data")
-    parser.add_argument("output_prefix", help="Output fasta file with predicted sequences")
-    parser.add_argument("--mode", 
-                        choices=["precursor", "full", "locator"], 
+    parser.add_argument("--input_file", "-i", required = True, help="File in fasta format with protein data (amino acids)")
+    parser.add_argument("--output_prefix", "-o", required = True, help="Output file name or path to save the results")
+    parser.add_argument("--mode", "-m",
+                        choices=["precursor", "locator", "full"], 
                         required=True,
-                        help="Mode of prediction: 'precursors' (only precursor detection), 'full' (both steps), or 'locator' (AMP localization only)")
+                        help="Mode of prediction: 'precursors' (only precursor detection), 'locator' (only predict AMP mature peptide region in candidate precursors) or 'full' (both steps)")
     
     args = parser.parse_args()
 
     run_prediction(
-        fasta_file=args.fasta_file,
+        input_file=args.input_file,
         output_prefix=args.output_prefix,
         mode=args.mode
     )
