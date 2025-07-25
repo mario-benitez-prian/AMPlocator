@@ -2,7 +2,7 @@
 # or insert this line at the beginning of the `__init__.py` of a package that depends on tensorflow   
 
 # may put this function in another utility file
-def import_tensorflow():
+'''def import_tensorflow():
     # Filter tensorflow version warnings
     import os
     # https://stackoverflow.com/questions/40426502/is-there-a-way-to-suppress-the-messages-tensorflow-prints/40426709
@@ -18,9 +18,9 @@ def import_tensorflow():
     tf.get_logger().setLevel(logging.ERROR)
     return tf
 
-tf = import_tensorflow() 
+tf = import_tensorflow() '''
     
-import os
+'''import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"'''
