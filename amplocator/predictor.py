@@ -1,9 +1,9 @@
 import tensorflow as tf
-    from tensorflow.keras.models import load_model
-    import pandas as pd
-    import numpy as np
-    from amplocator.preprocess_data import preprocess_fasta_sequences
-    from amplocator.fasta_parser import read_fasta, write_fasta, write_precursor_predictions_table, write_locator_predictions_table, write_full_predictions_table
+from tensorflow.keras.models import load_model
+import pandas as pd
+import numpy as np
+from amplocator.preprocess_data import preprocess_fasta_sequences
+from amplocator.fasta_parser import read_fasta, write_fasta, write_precursor_predictions_table, write_locator_predictions_table, write_full_predictions_table
     
 def predict_precursors(headers, sequences, max_length, model_path):
 
