@@ -89,7 +89,7 @@ def predict_amp_regions(headers, sequences, max_length, model_path):
 
     return results
 
-    
+
 
 
 def run_prediction(input_file, output_prefix, mode):
