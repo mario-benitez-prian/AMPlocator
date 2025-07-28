@@ -1,3 +1,4 @@
+import os 
 import pandas as pd
 import numpy as np
 from Bio import SeqIO
@@ -8,9 +9,38 @@ from Bio.Seq import Seq
 
 
 def read_fasta(fasta_file):
-    records = list(SeqIO.parse(fasta_file, "fasta"))
-    headers = [record.description for record in records]
-    sequences = [str(record.seq).upper().strip() for record in records]
+
+    VALID_AMINO_ACIDS = set("ACDEFGHIKLMNPQRSTVWYXBZJUO*")  # incluye X, B, Z y stop *
+    
+    # Comprobación de existencia y extensión
+    if not os.path.isfile(fasta_file):
+        raise FileNotFoundError(f"File not found: {fasta_file}")
+    if not fasta_file.lower().endswith((".fasta", ".fa", ".faa", ".fsa")):
+        raise ValueError(f"File does not appear to be in FASTA format: {fasta_file}")
+
+    try:
+        records = list(SeqIO.parse(fasta_file, "fasta"))
+    except Exception as e:
+        raise ValueError(f"Could not parse the FASTA file: {e}")
+
+    if not records:
+        raise ValueError("The FASTA file is empty or could not be read.")
+
+    headers = []
+    sequences = []
+
+    for record in records:
+        seq = str(record.seq).upper().strip()
+        if not seq:
+            raise ValueError(f"Empty sequence found for record: {record.description}")
+        if not set(seq).issubset(VALID_AMINO_ACIDS):
+            raise ValueError(
+                f"Invalid characters found in sequence '{record.id}'. "
+                f"Ensure it's a protein FASTA file. Found: {set(seq) - VALID_AMINO_ACIDS}"
+            )
+        headers.append(record.description)
+        sequences.append(seq)
+
     return headers, sequences
 
 
