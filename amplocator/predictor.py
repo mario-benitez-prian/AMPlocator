@@ -10,7 +10,7 @@ def predict_precursors(headers, sequences, max_length, model_path):
 
     from tensorflow.keras.models import load_model
 
-    print("----------RUNNING PRECURSOR MODEL----------")
+    print("\n----------RUNNING PRECURSOR MODEL----------\n")
 
     print("[INFO] Reading and preprocessing data for precursor prediction...")
 
@@ -44,7 +44,7 @@ def predict_amp_regions(headers, sequences, max_length, model_path):
 
     from tensorflow.keras.models import load_model
 
-    print("----------RUNNING LOCATOR MODEL----------")
+    print("\n----------RUNNING LOCATOR MODEL----------\n")
 
     print("[INFO] Reading and preprocessing data for mature AMP localization...")
     X = preprocess_fasta_sequences(sequences, max_length)
@@ -99,8 +99,8 @@ def run_prediction(input_file, output_prefix, mode):
     headers, sequences = read_fasta(input_file)
 
     max_length = 300
-    precursor_model_path = "models/precursor_model.keras"
-    locator_model_path = "models/amp_locator_model.keras"
+    precursor_model_path = "../cache/models/precursor_model.keras"
+    locator_model_path = "../cache/models/amp_locator_model.keras"
 
     if mode == "precursor":
         results = predict_precursors(headers, sequences, max_length, precursor_model_path)
