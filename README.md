@@ -1,68 +1,77 @@
 # 🧬 AMPlocator
 
-**AMPminer** es una herramienta de línea de comandos para la detección de **péptidos antimicrobianos (AMPs)** en archivos FASTA de secuencias proteicas completas, utilizando un modelo de inteligencia artificial previamente entrenado.
+**AMPlocator** is a command-line tool that employs two deep-learning models to predict **antimicrobial peptide** precursors and mature/active peptide location.
 
 ---
 
-## 📦 Instalación
+## 📦 Instalation
 
-1. Clona el repositorio y navega a la carpeta del proyecto:
+1. Clone the repository and navigate to the project folder:
 
 ```bash
 git clone https://github.com/usuario/AMP_locator.git
 cd AMPlocator
 ```
 
-2. Crea un entorno virtual e instala las dependencias:
+2. Create a virtual environment and install dependencies:
 
 ```bash
-# Usando pip
+# Without creating a virtual environment
 pip install -r requirements.txt
 
-# O usando conda
+# Creating a virtual environment (recommended)
 conda create -n amplocator python=3.10
 conda activate amplocator
 pip install -r requirements.txt
 ```
 
-3. Instala el paquete como herramienta CLI:
+3. Install the package as a CLI tool (you can run the command 'amplocator' wherever you are in your system):
 
 ```bash
 pip install .
 ```
 
-Esto habilita el comando `amplocator` desde cualquier parte del sistema.
-
 ---
 
-## 🧪 Uso
+## 🧪 How to use?
 
 ```bash
-amplocator <input.fasta> <output.fasta> --mode [precursor, full, locator]
+amplocator --input_file <input.fasta> --output_file <output.fasta> --mode [precursor, full, locator]
 ```
 
-### Argumentos:
+### Arguments:
 
 ```
-Posicionales:
-  input.fasta           Archivo FASTA de entrada con el proteoma completo.
-  output.fasta          Archivo FASTA de salida con las secuencias positivas.
-
-Opcionales:
+  --input_file          File in fasta format with protein data (amino acids)
+  --output_file         Output file prefix or path to save the results (several files will be saved in .fasta .tsv and .excel format)
   --mode                [precursor, full, locator]
 ```
 
-### Ejemplo:
+### Examples of usage:
+
+#### Predict only AMP precursors
 
 ```bash
-amplocator proteoma.fasta AMPs_predichos.fasta --mode precursor
+amplocator proteome.fasta precursors --mode precursor
+```
+
+#### Predict only AMP mature peptide regions in precursor candidates
+
+```bash
+amplocator precursor_candidates.fasta amp_regions --mode locator
+```
+
+#### Predict both precursors and AMP mature peptide regions
+
+```bash
+amplocator proteome.fasta precursors_and_amp_regions --mode locator
 ```
 
 ---
 
-## 📄 Requisitos
+## 📄 Requirements
 
-Las dependencias necesarias están listadas en `requirements.txt`. Las principales son:
+The necessary dependencies are listed below:
 
 - `tensorflow >= 2.x`
 - `numpy`
@@ -70,7 +79,7 @@ Las dependencias necesarias están listadas en `requirements.txt`. Las principal
 - `biopython`
 - `argparse`
 
-Instálalas con:
+You can install them with:
 
 ```bash
 pip install -r requirements.txt
@@ -80,6 +89,6 @@ pip install -r requirements.txt
 
 ## 👨‍🔬 Autor
 
-Desarrollado por **Mario Benitez-Prián** como parte de un proyecto de detección de péptidos antimicrobianos con inteligencia artificial.
+Developed by Mario Benítez-Prián et al.
 
 ---
