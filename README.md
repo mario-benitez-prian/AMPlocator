@@ -9,7 +9,7 @@
 1. Clone the repository and navigate to the project folder:
 
 ```bash
-git clone https://github.com/usuario/AMP_locator.git
+git clone https://github.com/mario-benitez-prian/AMPlocator.git
 cd AMPlocator
 ```
 
