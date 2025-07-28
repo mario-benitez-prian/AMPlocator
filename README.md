@@ -36,7 +36,7 @@ pip install .
 ## 🧪 How to use?
 
 ```bash
-amplocator --input_file <input.fasta> --output_file <output.fasta> --mode [precursor, full, locator]
+amplocator --input_file <input.fasta> --output_file <output file> --mode [precursor, full, locator]
 ```
 
 ### Arguments:
@@ -64,7 +64,7 @@ amplocator precursor_candidates.fasta amp_regions --mode locator
 #### Predict both precursors and AMP mature peptide regions
 
 ```bash
-amplocator proteome.fasta precursors_and_amp_regions --mode locator
+amplocator proteome.fasta precursors_and_amp_regions --mode full
 ```
 
 ---
