@@ -3,8 +3,14 @@ import numpy as np
 from amplocator.preprocess_data import preprocess_fasta_sequences
 from amplocator.io_parser import read_fasta, write_fasta, write_precursor_predictions_table, write_locator_predictions_table, write_full_predictions_table
 
+from pathlib import Path
+import importlib.resources as pkg_resources
+import amplocator  # Asegúrate que tu paquete se llama así
 
-
+def get_model_path(filename):
+    """Return the path to a model file inside the installed package."""
+    with pkg_resources.as_file(pkg_resources.files(amplocator) / "cache/models" / filename) as path:
+        return str(path)
 
 def predict_precursors(headers, sequences, max_length, model_path):
 
@@ -99,8 +105,8 @@ def run_prediction(input_file, output_prefix, mode):
     headers, sequences = read_fasta(input_file)
 
     max_length = 300
-    precursor_model_path = "../cache/models/precursor_model.keras"
-    locator_model_path = "../cache/models/amp_locator_model.keras"
+    precursor_model_path = get_model_path("precursor_model.keras")
+    locator_model_path = get_model_path("amp_locator_model.keras")
 
     if mode == "precursor":
         results = predict_precursors(headers, sequences, max_length, precursor_model_path)
