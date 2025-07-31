@@ -1,6 +1,6 @@
 import numpy as np
 
-def preprocess_fasta_sequences(sequences, max_length):
+def preprocess_fasta_sequences(sequences):
 
     import tensorflow as tf
 
@@ -8,6 +8,8 @@ def preprocess_fasta_sequences(sequences, max_length):
     amino_acids = 'ACDEFGHIKLMNPQRSTVWYX'
     aa_to_index = {aa: i for i, aa in enumerate(amino_acids)}
     num_classes = len(amino_acids)
+
+    max_length = 300
 
     #print(f"[DEBUG] Se cargaron en preprocess {len(sequences)} secuencias desde el FASTA.")
 

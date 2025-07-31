@@ -15,8 +15,6 @@ def read_fasta(fasta_file):
     # Comprobación de existencia y extensión
     if not os.path.isfile(fasta_file):
         raise FileNotFoundError(f"File not found: {fasta_file}")
-    if not fasta_file.lower().endswith((".fasta", ".fa", ".faa", ".fsa")):
-        raise ValueError(f"File does not appear to be in FASTA format: {fasta_file}")
 
     try:
         records = list(SeqIO.parse(fasta_file, "fasta"))

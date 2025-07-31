@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import re
 from amplocator.preprocess_data import preprocess_fasta_sequences
 from amplocator.io_parser import read_fasta, write_fasta, write_precursor_predictions_table, write_locator_predictions_table, write_full_predictions_table
 
@@ -9,10 +10,11 @@ import amplocator  # Asegúrate que tu paquete se llama así
 
 def get_model_path(filename):
     """Return the path to a model file inside the installed package."""
+
     with pkg_resources.as_file(pkg_resources.files(amplocator) / "cache/models" / filename) as path:
         return str(path)
 
-def predict_precursors(headers, sequences, max_length, model_path):
+def predict_precursors(headers, sequences, model_path):
 
     from tensorflow.keras.models import load_model
 
@@ -20,7 +22,7 @@ def predict_precursors(headers, sequences, max_length, model_path):
 
     print("[INFO] Reading and preprocessing data for precursor prediction...")
 
-    X = preprocess_fasta_sequences(sequences, max_length)
+    X = preprocess_fasta_sequences(sequences)
 
     model = load_model(model_path)
 
@@ -46,14 +48,14 @@ def predict_precursors(headers, sequences, max_length, model_path):
 
 
 
-def predict_amp_regions(headers, sequences, max_length, model_path):
+def predict_amp_regions(headers, sequences, model_path):
 
     from tensorflow.keras.models import load_model
 
     print("\n----------RUNNING LOCATOR MODEL----------\n")
 
     print("[INFO] Reading and preprocessing data for mature AMP localization...")
-    X = preprocess_fasta_sequences(sequences, max_length)
+    X = preprocess_fasta_sequences(sequences)
 
     model = load_model(model_path)
 
@@ -102,27 +104,40 @@ def run_prediction(input_file, output_prefix, mode):
 
     import tensorflow as tf
 
+    output_prefix = re.sub(r'\s*\(.*?\)', '', output_prefix)  # remove " (1)", etc.
+    output_prefix = output_prefix.replace(" ", "_")           # replace spaces with "_"
+
     headers, sequences = read_fasta(input_file)
 
-    max_length = 300
-    precursor_model_path = get_model_path("precursor_model.keras")
-    locator_model_path = get_model_path("amp_locator_model.keras")
-
     if mode == "precursor":
-        results = predict_precursors(headers, sequences, max_length, precursor_model_path)
-        write_fasta(results, output_prefix)
-        write_precursor_predictions_table(results, output_prefix)
+        precursor_results = predict_precursors(headers, sequences, get_model_path("precursor_model.keras"))
+
+        if precursor_results.empty:
+            print("[WARNING] No precursors detected.")
+            return
+        else:
+            write_fasta(precursor_results, output_prefix)
+            write_precursor_predictions_table(precursor_results, output_prefix)
 
     elif mode == "full":
-        precursor_results = predict_precursors(headers, sequences, max_length, precursor_model_path) 
-        write_fasta(precursor_results, output_prefix)
+        precursor_results = predict_precursors(headers, sequences, get_model_path("precursor_model.keras"))
 
-        locator_results = predict_amp_regions(list(precursor_results["ID"]), list(precursor_results["Precursor"]), max_length, locator_model_path)
-        write_full_predictions_table(precursor_results, locator_results, output_prefix)
+        if precursor_results.empty:
+            print("[WARNING] No precursors detected.")
+            return
+        else:
+            write_fasta(precursor_results, output_prefix)
+            locator_results = predict_amp_regions(list(precursor_results["ID"]), list(precursor_results["Precursor"]), get_model_path("amp_locator_model.keras"))
+            write_full_predictions_table(precursor_results, locator_results, output_prefix)
 
     elif mode == "locator":
-        results = predict_amp_regions(headers, sequences, max_length, locator_model_path)
-        write_locator_predictions_table(results, output_prefix)
+        locator_results = predict_amp_regions(headers, sequences, get_model_path("amp_locator_model.keras"))
+
+        if locator_results.empty:
+            print("[WARNING] No mature AMP detected.")
+            return
+        else:
+            write_locator_predictions_table(locator_results, output_prefix)
 
     print("[INFO] Prediction completed.")
 
